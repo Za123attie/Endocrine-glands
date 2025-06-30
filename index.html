@@ -1,0 +1,476 @@
+<!DOCTYPE html>  <html lang="th">  
+<head>  
+<meta charset="UTF-8" />  
+<meta name="viewport" content="width=device-width, initial-scale=1" />  
+<title>Endocrine Empire - เกมระบบต่อมไร้ท่อ</title>  
+<style>
+  
+  
+  
+  body {  
+    font-family: 'Kanit', sans-serif, Arial;  
+    background: #e0f7fa;  
+    margin: 0; padding: 20px;  
+    display: flex; flex-direction: column; align-items: center;  
+  }  
+  
+  h1 {  
+    color: #006064;  
+    margin-bottom: 10px;  
+  }  
+  .board {  
+    display: grid;  
+    grid-template-columns: repeat(6, 1fr);  
+    gap: 6px;  
+    max-width: 620px;  
+    margin-bottom: 15px;  
+  }  
+  .tile {  
+    background: linear-gradient(135deg, #4dd0e1, #006064);  
+    color: white;  
+    border-radius: 10px;  
+    min-height: 70px;  
+    padding: 8px;  
+    font-size: 13px;  
+    text-align: center;  
+    position: relative;  
+    cursor: pointer;  
+    user-select: none;  
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);  
+    transition: transform 0.2s ease;  
+  }  
+  .tile:hover {  
+    transform: scale(1.05);  
+  }  
+  .tile.start { background: linear-gradient(135deg, #81c784, #388e3c); }  
+  .tile.gland { background: linear-gradient(135deg, #64b5f6, #1565c0); }  
+  .tile.question { background: linear-gradient(135deg, #ba68c8, #6a1b9a); }  
+  .tile.event { background: linear-gradient(135deg, #ffb74d, #ef6c00); }  
+  .tile.hormone { background: linear-gradient(135deg, #f48fb1, #ad1457); }  
+  .tile.crisis { background: linear-gradient(135deg, #e57373, #c62828); }  
+  .tile.exchange { background: linear-gradient(135deg, #fff176, #f9a825); }  
+  .tile.bloodstream { background: linear-gradient(135deg, #4db6ac, #00695c); }  .players {
+position: absolute;
+top: 6px; right: 6px;
+display: flex;
+gap: 5px;
+}
+.player-circle {
+width: 20px; height: 20px;
+border-radius: 50%;
+border: 2px solid white;
+font-size: 12px;
+line-height: 20px;
+color: white;
+text-align: center;
+font-weight: bold;
+}
+
+#rollBtn {
+padding: 14px 30px;
+font-size: 20px;
+background: linear-gradient(90deg, #00838f, #4dd0e1);
+color: white;
+border: none;
+border-radius: 12px;
+cursor: pointer;
+box-shadow: 0 4px 8px rgba(0,131,143,0.6);
+margin-bottom: 12px;
+transition: background 0.3s ease;
+}
+#rollBtn:hover {
+background: linear-gradient(90deg, #004d51, #26c6da);
+}
+#rollBtn:disabled {
+background: #999;
+cursor: not-allowed;
+}
+
+#info {
+max-width: 620px;
+background: white;
+border-radius: 12px;
+padding: 16px 20px;
+font-size: 18px;
+box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+margin-bottom: 15px;
+color: #004d40;
+font-weight: 600;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+/* ป๊อปอัพรายละเอียด */
+#popup {
+position: fixed;
+top: 50%; left: 50%;
+transform: translate(-50%, -50%);
+background: white;
+border-radius: 16px;
+box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+padding: 25px 30px;
+max-width: 400px;
+z-index: 1000;
+display: none;
+}
+#popup h2 {
+margin-top: 0;
+margin-bottom: 10px;
+color: #00796b;
+}
+#popup p {
+font-size: 16px;
+margin-bottom: 20px;
+line-height: 1.4;
+}
+#popup button {
+padding: 10px 20px;
+font-size: 16px;
+background: #00796b;
+color: white;
+border: none;
+border-radius: 10px;
+cursor: pointer;
+}
+#popup button:hover {
+background: #004d40;
+}
+
+/* Overlay เบลอพื้นหลังเมื่อเปิด popup */
+#overlay {
+position: fixed;
+top:0; left:0; right:0; bottom:0;
+background: rgba(0,0,0,0.4);
+z-index: 999;
+display: none;
+}
+
+</style>  
+  <!-- HTML -->
+<div id="info">
+  <div id="playerTurn">ผู้เล่น 1 กำลังเล่น 🎲</div>
+  <div id="moneyStatus">
+    <div class="playerMoney player1">
+      🟥 ผู้เล่น 1: <span id="money1">1000</span> บาท
+    </div>
+    <div class="playerMoney player2">
+      🟦 ผู้เล่น 2: <span id="money2">1000</span> บาท
+    </div>
+  </div>
+</div>
+
+<style>
+  #moneyStatus {
+    display: flex;
+    gap: 16px;
+    max-width: 400px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .playerMoney {
+    flex: 1;
+    padding: 16px;
+    border-radius: 16px;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    text-align: center;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    user-select: none;
+  }
+  .player1 {
+    background: linear-gradient(135deg, #ff8a80, #c85a55);
+  }
+  .player2 {
+    background: linear-gradient(135deg, #4dd0e1, #00838f);
+  }
+</style>
+  
+</head>  
+<body>  <h1>🏰 Endocrine Empire - เกมระบบต่อมไร้ท่อ 🧬</h1>  <div id="info">  
+  <div id="playerTurn">ผู้เล่น 1 กำลังเล่น 🎲</div>  
+  <div id="playerMoney">เงินผู้เล่น: <span id="money1">1000</span> บาท | <span id="money2">1000</span> บาท</div>  
+</div>  <div class="board" id="board"></div>  <button id="rollBtn">🎲 ทอยเต๋า</button>
+
+<!-- ป๊อปอัพรายละเอียด -->  <div id="overlay"></div>  
+<div id="popup">  
+  <h2 id="popupTitle"></h2>  
+  <p id="popupContent"></p>  
+  <div id="popupActions"></div>  
+</div>  <script>  
+  // ข้อมูลบอร์ดเกม  
+  const boardTiles = [  
+    { id: 0, name: "เริ่ม", type: "start", description: "จุดเริ่มต้นของเกม! 🎉" },  
+    { id: 1, name: "ต่อมใต้สมอง", type: "gland", price: 300, owner: null, description: "ต่อมใต้สมองควบคุมฮอร์โมนหลายชนิดสำคัญ 🧠" },  
+    { id: 2, name: "คำถามชีวะ", type: "question", description: "ตอบคำถามชีววิทยาเพื่อรับรางวัล! 📚" },  
+    { id: 3, name: "ต่อมไทรอยด์", type: "gland", price: 350, owner: null, description: "ต่อมไทรอยด์ควบคุมระบบเมตาบอลิซึมในร่างกาย 🔥" },  
+    { id: 4, name: "เหตุการณ์", type: "event", description: "เหตุการณ์สุ่มที่อาจมีผลดีหรือร้าย 🎲" },  
+    { id: 5, name: "ต่อมพาราไทรอยด์", type: "gland", price: 320, owner: null, description: "ควบคุมระดับแคลเซียมในเลือด 🦴" },  
+    { id: 6, name: "ฮอร์โมน", type: "hormone", description: "รับรู้ข้อมูลเกี่ยวกับฮอร์โมนต่าง ๆ 💉" },  
+    { id: 7, name: "ต่อมไพเนียล", type: "gland", price: 280, owner: null, description: "เกี่ยวข้องกับการผลิตเมลาโทนินและวงจรการนอน 🌙" },  
+    { id: 8, name: "วิกฤต", type: "crisis", description: "เจอวิกฤต ต้องแก้ปัญหาให้ได้! ⚠️" },  
+    { id: 9, name: "ต่อมหมวกไต", type: "gland", price: 360, owner: null, description: "สร้างฮอร์โมนตอบสนองต่อความเครียด 🛡️" },  
+    { id: 10, name: "แลกเปลี่ยน", type: "exchange", description: "แลกเปลี่ยนสิทธิ์หรือเงินกับผู้เล่นอื่น 🔄" },  
+    { id: 11, name: "ต่อมตับอ่อน", type: "gland", price: 400, owner: null, description: "ควบคุมระดับน้ำตาลในเลือด 🍬" },  
+    { id: 12, name: "กระแสเลือด", type: "bloodstream", description: "รับข้อมูลเกี่ยวกับระบบไหลเวียนเลือด 🩸" },  
+    { id: 13, name: "ต่อมเพศ", type: "gland", price: 500, owner: null, description: "ควบคุมฮอร์โมนเพศและพัฒนาการทางเพศ ⚧️" },  
+    { id: 14, name: "คำถามชีวะ", type: "question", description: "ตอบคำถามชีววิทยาเพื่อรับรางวัล! 📚" },  
+    { id: 15, name: "เหตุการณ์", type: "event", description: "เหตุการณ์สุ่มที่อาจมีผลดีหรือร้าย 🎲" },  
+    { id: 16, name: "ฮอร์โมน", type: "hormone", description: "รับรู้ข้อมูลเกี่ยวกับฮอร์โมนต่าง ๆ 💉" },  
+    { id: 17, name: "วิกฤต", type: "crisis", description: "เจอวิกฤต ต้องแก้ปัญหาให้ได้! ⚠️" },  
+    { id: 18, name: "แลกเปลี่ยน", type: "exchange", description: "แลกเปลี่ยนสิทธิ์หรือเงินกับผู้เล่นอื่น 🔄" },  
+    { id: 19, name: "กระแสเลือด", type: "bloodstream", description: "รับข้อมูลเกี่ยวกับระบบไหลเวียนเลือด 🩸" },  
+    { id: 20, name: "ต่อมใต้สมอง", type: "gland", price: 300, owner: null, description: "ต่อมใต้สมองควบคุมฮอร์โมนหลายชนิดสำคัญ 🧠" },  
+    { id: 21, name: "คำถามชีวะ", type: "question", description: "ตอบคำถามชีววิทยาเพื่อรับรางวัล! 📚" },  
+    { id: 22, name: "ต่อมไทรอยด์", type: "gland", price: 350, owner: null, description: "ต่อมไทรอยด์ควบคุมระบบเมตาบอลิซึมในร่างกาย 🔥" },  
+    { id: 23, name: "เหตุการณ์", type: "event", description: "เหตุการณ์สุ่มที่อาจมีผลดีหรือร้าย 🎲" },  
+    { id: 24, name: "ต่อมพาราไทรอยด์", type: "gland", price: 320, owner: null, description: "ควบคุมระดับแคลเซียมในเลือด 🦴" },  
+    { id: 25, name: "ฮอร์โมน", type: "hormone", description: "รับรู้ข้อมูลเกี่ยวกับฮอร์โมนต่าง ๆ 💉" },  
+    { id: 26, name: "ต่อมไพเนียล", type: "gland", price: 280, owner: null, description: "เกี่ยวข้องกับการผลิตเมลาโทนินและวงจรการนอน 🌙" },  
+    { id: 27, name: "วิกฤต", type: "crisis", description: "เจอวิกฤต ต้องแก้ปัญหาให้ได้! ⚠️" },  
+    { id: 28, name: "ต่อมหมวกไต", type: "gland", price: 360, owner: null, description: "สร้างฮอร์โมนตอบสนองต่อความเครียด 🛡️" },  
+    { id: 29, name: "แลกเปลี่ยน", type: "exchange", description: "แลกเปลี่ยนสิทธิ์หรือเงินกับผู้เล่นอื่น 🔄" }  
+  ];  
+  
+  // คำถามสุ่มตัวอย่าง  
+  const questionPool = [  
+    { question: "ต่อมใต้สมองควบคุมฮอร์โมนใด?", answer: "ฮอร์โมนหลายชนิด" },  
+    { question: "ต่อมไทรอยด์ควบคุมระบบอะไร?", answer: "เมตาบอลิซึม" },  
+    { question: "ต่อมพาราไทรอยด์ควบคุมระดับสารใดในเลือด?", answer: "แคลเซียม" },  
+    { question: "ต่อมไพเนียลเกี่ยวข้องกับการผลิตฮอร์โมนใด?", answer: "เมลาโทนิน" },  
+    { question: "ต่อมหมวกไตผลิตฮอร์โมนเพื่อตอบสนองต่ออะไร?", answer: "ความเครียด" }  
+  ];  
+  
+  // เหตุการณ์สุ่มตัวอย่าง (ได้-เสียเงิน)  
+  const eventPool = [  
+    { text: "ได้รับโบนัสฮอร์โมนเพิ่มพลังงาน! +200 บาท", effect: (player) => player.money += 200 },  
+    { text: "โดนไวรัสรบกวนต่อมหมวกไต ต้องเสียค่ารักษา -150 บาท", effect: (player) => player.money -= 150 },  
+    { text: "ได้ข้อตกลงกับผู้เล่นคนอื่น รับเงิน 100 บาท", effect: (player) => player.money += 100 },  
+    { text: "ต้องเสียค่ารักษาพยาบาล -100 บาท", effect: (player) => player.money -= 100 },  
+    { text: "พบแหล่งฮอร์โมนธรรมชาติ รับเงิน 150 บาท", effect: (player) => player.money += 150 }  
+  ];  
+  
+  // ผู้เล่น 2 คน  
+  const players = [  
+    { id: 0, name: 'ผู้เล่น 1', position: 0, money: 1000, color: '#FF6B6B' },  
+    { id: 1, name: 'ผู้เล่น 2', position: 0, money: 1000, color: '#4ECDC4' }  
+  ];  
+  
+  let currentPlayerIndex = 0;  
+  
+  const boardDiv = document.getElementById('board');  
+  const rollBtn = document.getElementById('rollBtn');  
+  const infoDiv = document.getElementById('info');  
+  const playerTurnDiv = document.getElementById('playerTurn');  
+  const money1Span = document.getElementById('money1');  
+  const money2Span = document.getElementById('money2');  
+  
+  const popup = document.getElementById('popup');  
+  const popupTitle = document.getElementById('popupTitle');  
+  const popupContent = document.getElementById('popupContent');  
+  const popupActions = document.getElementById('popupActions');  
+  const overlay = document.getElementById('overlay');  
+  
+  function renderBoard() {
+  boardDiv.innerHTML = '';
+  boardTiles.forEach(tile => {
+    const tileDiv = document.createElement('div');
+    tileDiv.className = `tile ${tile.type}`;
+    tileDiv.title = tile.description;
+
+    const ownerIcon = (tile.owner !== null && tile.type === 'gland') ? `<div class="owner-icon">🏠 ผู้เล่น ${tile.owner + 1}</div>` : '';
+
+    tileDiv.innerHTML = `
+      <div><strong>${tile.name}</strong></div>
+      ${tile.price ? `<div>💰 ราคา: ${tile.price} บาท</div>` : ''}
+      <div style="position:absolute; bottom: 4px; right: 6px; font-size:10px; color:#eee;">${tile.id + 1}</div>
+      ${ownerIcon}
+      <div class="players"></div>
+    `;
+    boardDiv.appendChild(tileDiv);
+  });
+  updatePlayerPositions();
+} 
+  
+  function updatePlayerPositions() {  
+    document.querySelectorAll('.players').forEach(div => div.innerHTML = '');  
+    players.forEach(p => {  
+      const tileDiv = boardDiv.children[p.position];  
+      const playersDiv = tileDiv.querySelector('.players');  
+      const playerCircle = document.createElement('div');  
+      playerCircle.className = 'player-circle';  
+      playerCircle.style.backgroundColor = p.color;  
+      playerCircle.textContent = (p.id + 1);  
+      playersDiv.appendChild(playerCircle);  
+    });  
+  }  
+  
+  function updateInfo() {  
+    const currentPlayer = players[currentPlayerIndex];  
+    playerTurnDiv.textContent = `🎲 ผู้เล่น ${currentPlayer.id + 1} (${currentPlayer.name}) กำลังเล่น`;  
+    money1Span.textContent = players[0].money;  
+    money2Span.textContent = players[1].money;  
+  }  
+  
+  function rollDice() {  
+    rollBtn.disabled = true; // ล็อคปุ่มระหว่างรอเล่น  
+    const dice = Math.floor(Math.random() * 6) + 1;  
+    alert(`🎲 ทอยเต๋าได้ ${dice} แต้ม`);
+
+    let player = players[currentPlayerIndex];
+    let newPos = player.position + dice;
+    if (newPos >= boardTiles.length) newPos -= boardTiles.length;
+
+    player.position = newPos;
+    renderBoard();
+    updateInfo();
+
+    const tile = boardTiles[newPos];
+
+    // ฟังก์ชันช่วยปิด popup และปลดล็อคปุ่ม
+    function endTurn() {
+      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      updateInfo();
+      rollBtn.disabled = false;
+    }
+
+    // ฟังก์ชันแสดง popup
+    function showPopup(title, content, actionsHtml = '') {
+      popupTitle.textContent = title;
+      popupContent.textContent = content;
+      popupActions.innerHTML = actionsHtml;
+      overlay.style.display = 'block';
+      popup.style.display = 'block';
+    }
+
+    // ฟังก์ชันปิด popup
+    function closePopup() {
+      overlay.style.display = 'none';
+      popup.style.display = 'none';
+      popupActions.innerHTML = '';
+    }
+
+    // กดปิด popup แล้วจบเทิร์น
+    function onClosePopup() {
+      closePopup();
+      endTurn();
+    }
+
+    // ตรวจสอบประเภทช่องที่หยุด
+    if (tile.type === 'gland') {
+      if (tile.owner === null) {
+        // ถ้าไม่มีเจ้าของ ให้ถามซื้อถ้ามีเงินพอ
+        if (player.money >= tile.price) {
+          showPopup(
+            tile.name,
+            `${tile.description}\n\nต้องการซื้อในราคา ${tile.price} บาทหรือไม่?`,
+            `<button id="buyBtn">ซื้อ</button> <button id="cancelBtn">ยกเลิก</button>`
+          );
+
+          document.getElementById('buyBtn').onclick = () => {
+            player.money -= tile.price;
+            tile.owner = player.id;
+            alert(`ซื้อ ${tile.name} เรียบร้อย! เงินคงเหลือ ${player.money} บาท`);
+            closePopup();
+            endTurn();
+          };
+
+          document.getElementById('cancelBtn').onclick = () => {
+            closePopup();
+            endTurn();
+          };
+
+        } else {
+          alert(`เงินไม่พอซื้อ ${tile.name}`);
+          endTurn();
+        }
+
+      } else if (tile.owner === player.id) {
+        alert(`คุณอยู่ในช่องของตัวเอง: ${tile.name}`);
+        endTurn();
+
+      } else {
+        // ช่องมีเจ้าของคนอื่น ต้องจ่ายค่าเช่า 10% ของราคาช่อง
+        const owner = players[tile.owner];
+        const rent = Math.floor(tile.price * 0.1);
+
+        if (player.money >= rent) {
+          player.money -= rent;
+          owner.money += rent;
+          alert(`คุณจ่ายค่าเช่า ${rent} บาท ให้ผู้เล่น ${owner.id + 1}`);
+        } else {
+          alert(`เงินไม่พอจ่ายค่าเช่า! (ยังไม่มีระบบล้มละลาย)`);
+          // อาจขยายระบบต่อไป
+        }
+        endTurn();
+      }
+
+    } else if (tile.type === 'question') {
+      // เลือกคำถามสุ่ม
+      const q = questionPool[Math.floor(Math.random() * questionPool.length)];
+
+      showPopup(
+        'คำถามชีวะ',
+        `${q.question}\nพิมพ์คำตอบของคุณ:`,
+        `<input type="text" id="answerInput" style="width: 100%; margin-bottom: 10px; font-size: 16px;">
+         <button id="submitAnswerBtn">ตอบ</button>
+         <button id="cancelBtn">ยกเลิก</button>`
+      );
+
+      document.getElementById('submitAnswerBtn').onclick = () => {
+        const answerInput = document.getElementById('answerInput');
+        const userAnswer = answerInput.value.trim().toLowerCase();
+        if (userAnswer === q.answer.toLowerCase()) {
+          alert('ตอบถูก! รับเงิน 100 บาท 💰');
+          player.money += 100;
+        } else {
+          alert(`ตอบผิด! คำตอบที่ถูกคือ: ${q.answer} \nเสียเงิน 50 บาท 💸`);
+          player.money = Math.max(0, player.money - 50);
+        }
+        closePopup();
+        endTurn();
+      };
+
+      document.getElementById('cancelBtn').onclick = () => {
+        alert('ยกเลิกการตอบคำถาม');
+        closePopup();
+        endTurn();
+      };
+
+    } else if (tile.type === 'event') {
+      // เลือกเหตุการณ์สุ่ม
+      const event = eventPool[Math.floor(Math.random() * eventPool.length)];
+      event.effect(player);
+      alert(`${event.text}\nเงินของคุณตอนนี้: ${player.money} บาท`);
+      endTurn();
+
+    } else if (tile.type === 'crisis') {
+      alert(`${tile.name}: ${tile.description}\n(ระบบยังไม่รองรับการแก้ปัญหาวิกฤต)`);
+      endTurn();
+
+    } else if (tile.type === 'exchange') {
+      alert(`${tile.name}: ${tile.description}\n(ระบบแลกเปลี่ยนยังไม่พร้อมใช้)`);
+      endTurn();
+
+    } else {
+      // ช่องประเภทอื่น เช่น hormone, bloodstream, start
+      alert(`${tile.name}: ${tile.description}`);
+      endTurn();
+    }
+  }
+  
+
+  // ปิด popup เมื่อคลิก overlay
+  overlay.onclick = () => {
+    closePopup();
+    rollBtn.disabled = false;
+  };
+  
+
+  rollBtn.addEventListener('click', rollDice);
+
+  renderBoard();
+  updateInfo();
+  
+</script>
